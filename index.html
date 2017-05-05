@@ -15,17 +15,20 @@
 }
 
 </style>
-<svg width="960" height="500"></svg>
+<svg id = "agg" width="600" height="500"></svg>
+<svg id = "reg" width="600" height="500"></svg>
 <script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
 <script>
-
+var emotions = ['anger', 'anticipation', 'disgust', 'fear', 'joy', 'negative', 'positive', 'sadness', 'surprise', 'trust']
 var svg = d3.select("svg"),
     margin = {top: 20, right: 20, bottom: 30, left: 80},
     width = +svg.attr("width") - margin.left - margin.right,
     height = +svg.attr("height") - margin.top - margin.bottom;
 
 var x = d3.scaleBand().rangeRound([0, width]).padding(0.1),
-    y = d3.scaleLinear().rangeRound([height, 0]);
+    y = d3.scaleLinear().rangeRound([height, 0])
+    ;
 
 var g = svg.append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
@@ -36,9 +39,9 @@ d3.json("data/filelist.json", function(dlist) {
 	console.log(dlist.sagg[(dlist.sagg.length-1)]);
   var latest = 'data/'+dlist.sagg[(dlist.sagg.length-1)];
 
+//Get aggregate counts 
  d3.json(latest, function(data){
 	console.log(data)
-
   x.domain(data.map(function(d) { return d.sentiment; }));
   y.domain([0, d3.max(data, function(d) { return d.n; })]);
 
@@ -67,6 +70,14 @@ d3.json("data/filelist.json", function(dlist) {
       .attr("y", function(d) { return y(d.n); })
       .attr("width", x.bandwidth())
       .attr("height", function(d) { return height - y(d.n); });
+      
+  g.append("g")
+  	.append('text')
+      .attr("y", 6)
+      .attr("x", 6)
+      .attr("dy", "0.71em")
+  	.text("Sentiment count -- all")
+
 
  });
 
@@ -74,22 +85,55 @@ d3.json("data/filelist.json", function(dlist) {
   var latestGroup = 'data/'+dlist.grdt[(dlist.grdt.length-1)];
 
  d3.json(latestGroup, function(data){
-	console.log(data)
+ 	
+	console.log(data);
+	var grpArr = _.pluck(data, 'group');
+	grpArr.forEach(function(grp){
+		var thisGroup = _.filter(data, {'group':grp})[0];
+		
+		var grpCln = grp.replace(/[^a-z0-9]/gmi, "_").replace(/\s+/g, "_");
+		
+		grpCln = grpCln != '' ? grpCln : 'unclassified'
+		
+		var gDat = [];
+		
+	  emotions.forEach(function(emo){
+			gDat.push({sentiment:emo, n:thisGroup[emo]})
+	  });
+	
+		var grpSvg = d3.select('body').append('svg')
+		.attr('id', grpCln)
+		.attr('width', "600") 
+		.attr('height', "250");
 
-/*
-  x.domain(data.map(function(d) { return d.sentiment; }));
-  y.domain([0, d3.max(data, function(d) { return d.n; })]);
+    var height2 = +grpSvg.attr("height") - margin.top - margin.bottom;
 
-  g.append("g")
+	  var y2 = d3.scaleLinear().rangeRound([(height2), 0])
+		
+		var grpG = grpSvg.append('g')
+    .attr("transform", "translate(" + margin.left + "," + margin.top/4 + ")");
+
+  x.domain(emotions);
+  y2.domain([0, d3.max(gDat, function(d) { return d.n; })]);
+	var grptext = grp.replace(/[^a-z0-9]/gmi, "_").replace(/\s+/g, "_") != '' ? grp : grpCln;
+	
+  grpG.append("g")
+  	.append('text')
+      .attr("y", 6)
+      .attr("x", 6)
+      .attr("dy", "0.71em")
+  	.text(grptext)
+
+  grpG.append("g")
       .attr("class", "axis axis--x")
-      .attr("id", "xaxis")
-      .attr("transform", "translate(0," + height + ")")
+      .attr("id", "xaxis_"+grpCln)
+      .attr("transform", "translate(0," + height2 + ")")
       .call(d3.axisBottom(x));
 
-  g.append("g")
+  grpG.append("g")
       .attr("class", "axis axis--y")
-      .attr("id", "yaxis")
-      .call(d3.axisLeft(y).ticks(10))
+      .attr("id", "yaxis_"+grpCln)
+      .call(d3.axisLeft(y2).ticks(10))
     .append("text")
       .attr("transform", "rotate(-90)")
       .attr("y", 6)
@@ -97,15 +141,21 @@ d3.json("data/filelist.json", function(dlist) {
       .attr("text-anchor", "end")
       .text("Frequency");
 
-  g.selectAll(".bar")
-    .data(data)
+  grpG.selectAll(".bar_"+grpCln)
+    .data(gDat)
     .enter().append("rect")
-      .attr("class", "bar")
+      .attr("class", "bar_"+grpCln)
       .attr("x", function(d) { return x(d.sentiment); })
-      .attr("y", function(d) { return y(d.n); })
+      .attr("y", function(d) { return y2(d.n); })
+      .attr("fill", "steelblue")
       .attr("width", x.bandwidth())
-      .attr("height", function(d) { return height - y(d.n); });
-*/
+      .attr("height", function(d) { return height2 - y2(d.n)});
+
+
+
+	})
+	
+
  });
 
 
@@ -116,13 +166,13 @@ d3.json("data/filelist.json", function(dlist) {
 function update(){
 
 d3.json("data/filelist.json", function(dlist) {
-	console.log(dlist);
-	console.log(dlist.sagg[(dlist.sagg.length-1)]);
+//	console.log(dlist);
+//	console.log(dlist.sagg[(dlist.sagg.length-1)]);
   var latest = 'data/'+dlist.sagg[(dlist.sagg.length-1)];
   var newDets = 'data/'+dlist.grdt[(dlist.grdt.length-1)];
 
  d3.json(latest, function(data){
-	console.log(data)
+//	console.log(data)
   x.domain(data.map(function(d) { return d.sentiment; }));
   y.domain([0, d3.max(data, function(d) { return d.n; })]);
 
@@ -136,7 +186,7 @@ d3.json("data/filelist.json", function(dlist) {
       .attr("y", 6)
       .attr("dy", "0.71em");
 
-  d3.selectAll(".bar")
+  d3.select('#agg').selectAll(".bar")
     .data(data)
 		.transition().duration(1500)
       .attr("x", function(d) { return x(d.sentiment); })

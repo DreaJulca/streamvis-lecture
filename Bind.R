@@ -323,26 +323,8 @@ recur <- function(){
 		writeLines(jsonlite::toJSON(as.data.frame(summary(runReg())$coef)), paste0(outDir, 'Regression',format(Sys.time(), '%Y%m%d%H%M%S'),'.json'));
 		writeLines(jsonlite::toJSON(tib), paste0(outDir, 'TibBk',format(Sys.time(), '%Y%m%d%H%M%S'),'.json'));
 
-		filelist <- list.files(outDir)
-		metalist <- list(
-			'sagg' = filelist[grepl('SentimentAgg', filelist, fixed=T)],
-			'grdt' = filelist[grepl('GrpDetail', filelist, fixed=T)],
-			'regr' = filelist[grepl('Regression', filelist, fixed=T)],
-			'tibb' = filelist[grepl('TibBk', filelist, fixed=T)]
-		)
-		
-		tryCatch(
-			{
-				writeLines(jsonlite::toJSON(metalist), paste0(outDir, 'FileList.json'))
-			}, 
-			error = function(e){
-				writeLines(jsonlite::toJSON(metalist), paste0(outDir, 'FileList.json'))
-			},
-			finally = {
 				upCnt <<- upCnt + 1;
 				s <<- 0;
-		}
-	)
 	} else {
 		bumps <- s;
 		s <<- bumps + 120;
@@ -356,8 +338,29 @@ recur <- function(){
 			upCnt <<- 0;
 	}
 	
+	#Update the file list either way
+	filelist <- list.files(outDir)
+	metalist <- list(
+		'sagg' = filelist[grepl('SentimentAgg', filelist, fixed=T)],
+		'grdt' = filelist[grepl('GrpDetail', filelist, fixed=T)],
+		'regr' = filelist[grepl('Regression', filelist, fixed=T)],
+		'tibb' = filelist[grepl('TibBk', filelist, fixed=T)]
+	)
+	
+		tryCatch(
+			{
+				writeLines(jsonlite::toJSON(metalist), paste0(outDir, 'FileList.json'))
+			}, 
+			error = function(e){
+				writeLines(jsonlite::toJSON(metalist), paste0(outDir, 'FileList.json'))
+			},
+			finally = {
+		}
+	)
 	Sys.sleep(10);
+	
 	recur();
+	
 }
 
 recur();
