@@ -217,151 +217,22 @@ runReg <- function(){
 	
 	y <- grpPr[grpSn]
 
-	y[avg_price    > 0, avg_price    := as.numeric(log(avg_price	 ))]
-	y[anger        > 0, anger        := as.numeric(log(anger       ))]
-	y[anticipation > 0, anticipation := as.numeric(log(anticipation))]
-	y[disgust      > 0, disgust      := as.numeric(log(disgust     ))]
-	y[fear         > 0, fear         := as.numeric(log(fear        ))]
-	y[joy          > 0, joy          := as.numeric(log(joy         ))]
-	y[negative     > 0, negative     := as.numeric(log(negative    ))]
-	y[positive     > 0, positive     := as.numeric(log(positive    ))]
-	y[sadness      > 0, sadness      := as.numeric(log(sadness     ))]
-	y[surprise     > 0, surprise     := as.numeric(log(surprise    ))]
-	y[trust        > 0, trust        := as.numeric(log(trust       ))]
+#If we want to do loglinear model
+
+#	y[avg_price    > 0, avg_price    := as.numeric(log(avg_price	 ))]
+#	y[anger        > 0, anger        := as.numeric(log(anger       ))]
+#	y[anticipation > 0, anticipation := as.numeric(log(anticipation))]
+#	y[disgust      > 0, disgust      := as.numeric(log(disgust     ))]
+#	y[fear         > 0, fear         := as.numeric(log(fear        ))]
+#	y[joy          > 0, joy          := as.numeric(log(joy         ))]
+#	y[negative     > 0, negative     := as.numeric(log(negative    ))]
+#	y[positive     > 0, positive     := as.numeric(log(positive    ))]
+#	y[sadness      > 0, sadness      := as.numeric(log(sadness     ))]
+#	y[surprise     > 0, surprise     := as.numeric(log(surprise    ))]
+#	y[trust        > 0, trust        := as.numeric(log(trust       ))]
 	
-
-lapply(y[,unique(group)], function(grp){	 
-	
-#	zrs <- lapply(y[,unique(group)], function(grp){
-#		mdlstr <- 'mdl <- avg_price ~ '
-#		subY <- y[group == grp]
-#		if (!all(subY$anger 				== 0)){mdlstr <- paste0(mdlstr, '+anger 				')} 
-#		if (!all(subY$anticipation 	== 0)){mdlstr <- paste0(mdlstr, '+anticipation  ')} 
-#		if (!all(subY$disgust 			== 0)){mdlstr <- paste0(mdlstr, '+disgust 			')} 
-#		if (!all(subY$fear 					== 0)){mdlstr <- paste0(mdlstr, '+fear 				  ')} 
-#		if (!all(subY$joy 					== 0)){mdlstr <- paste0(mdlstr, '+joy 					')} 
-#		if (!all(subY$negative 			== 0)){mdlstr <- paste0(mdlstr, '+negative 		  ')} 
-#		if (!all(subY$positive 			== 0)){mdlstr <- paste0(mdlstr, '+positive 		  ')} 
-#		if (!all(subY$sadness 			== 0)){mdlstr <- paste0(mdlstr, '+sadness 			')} 
-#		if (!all(subY$surprise 			== 0)){mdlstr <- paste0(mdlstr, '+surprise 		  ')} 
-#		if (!all(subY$trust 				== 0)){mdlstr <- paste0(mdlstr, '+trust 				')} 
-#		
-#		mdlstr <- gsub('~ +', '~ ', mdlstr, fixed = TRUE)
-#		print(all(subY$anger 				== 0))
-#		print(subY)
-#		print(mdlstr)
-#
-#		eval(parse(text = mdlstr))
-#	
-#		zr <- lm(mdl, subY)
-#		names(zr$coeff)[1] <- 'Intercept'
-#
-#	})
-	regDT <- as.data.table(t(summary(zr)$coefficients))
-	
-	regDT[, rowname := attributes(t(summary(zr)$coefficients))$dimnames[[1]]]
-	setnames(regDT, old = '(Intercept)', new = 'Intercept')
-	setnames(regDT, old = names(regDT), new = paste0('reg.', names(regDT)))
-	regDT[reg.rowname == 'Estimate', joiner := 1]
-	y[, joiner := 1]
-	
-	zMrg <- merge(x = y, y = regDT, by = 'joiner', allow.cartesian = T)
-	
-	zMrg[, estimate := 
-		reg.Intercept + 
-		negative*reg.negative + 
-		positive*reg.positive + 
-		anger*reg.anger + 
-		anticipation*reg.anticipation + 
-		disgust*reg.disgust + 
-		fear*reg.fear + 
-		joy*reg.joy + 
-		sadness*reg.sadness + 
-		surprise*reg.surprise + 
-		trust*reg.trust
-	]
-
-# zMrg[, err := estimate - avg_price]
-#	zMrg[, .(sse = sum(err^2)), by = group]
-	
-#	out <- zMrg[, .(
-#		title, 
-#		group, 
-#		avg_price 		= ifelse(avg_price 		 == 0, 0, exp(1)^avg_price		), 
-#		estimate 			= ifelse(estimate 		 == 0, 0, exp(1)^estimate			), 
-#		negative 			= ifelse(negative 		 == 0, 0, exp(1)^negative			), 
-#		positive 			= ifelse(positive 		 == 0, 0, exp(1)^positive			),
-#		anger 				= ifelse(anger 			   == 0, 0, exp(1)^anger				),
-#		anticipation 	= ifelse(anticipation  == 0, 0, exp(1)^anticipation	),
-#		disgust 			= ifelse(disgust 		   == 0, 0, exp(1)^disgust			),
-#		fear 					= ifelse(fear 				 == 0, 0, exp(1)^fear					),
-#		joy 					= ifelse(joy 				   == 0, 0, exp(1)^joy					),
-#		sadness 			= ifelse(sadness 		   == 0, 0, exp(1)^sadness			),
-#		surprise 			= ifelse(surprise 		 == 0, 0, exp(1)^surprise			),
-#		trust 				= ifelse(trust 			   == 0, 0, exp(1)^trust        )
-#	)]
-
-	out <- zMrg[, .(
-		title, 
-		group, 
-		avg_price 		= exp(1)^avg_price		, 
-		estimate 			= exp(1)^estimate			, 
-		negative 			= exp(1)^negative			, 
-		positive 			= exp(1)^positive			,
-		anger 				= exp(1)^anger				,
-		anticipation 	= exp(1)^anticipation	,
-		disgust 			= exp(1)^disgust			,
-		fear 					= exp(1)^fear					,
-		joy 					= exp(1)^joy					,
-		sadness 			= exp(1)^sadness			,
-		surprise 			= exp(1)^surprise			,
-		trust 				= exp(1)^trust       
-	)]
-
-
-#used to be using -1s
-#
-#	out <- out[, .(
-#		title, 
-#		group, 
-#		avg_price 		= ifelse(avg_price 		 < 0, 0, avg_price		), 
-#		estimate 			= ifelse(estimate 		 < 0, 0, estimate			), 
-#		negative 			= ifelse(negative 		 < 0, 0, negative			), 
-#		positive 			= ifelse(positive 		 < 0, 0, positive			),
-#		anger 				= ifelse(anger 			   < 0, 0, anger				),
-#		anticipation 	= ifelse(anticipation  < 0, 0, anticipation	),
-#		disgust 			= ifelse(disgust 		   < 0, 0, disgust			),
-#		fear 					= ifelse(fear 				 < 0, 0, fear					),
-#		joy 					= ifelse(joy 				   < 0, 0, joy					),
-#		sadness 			= ifelse(sadness 		   < 0, 0, sadness			),
-#		surprise 			= ifelse(surprise 		 < 0, 0, surprise			),
-#		trust 				= ifelse(trust 			   < 0, 0, trust        )
-#	)]
-#
-
-	out[, err := estimate - avg_price]    
-#	out[, .(sse = sum(err^2)), by = group]
-#ggplot(out, aes_string(x = 'avg_price', y = 'estimate')) + 
-#ggplot(zMrg, aes_string(x = 'estimate', y = 'err')) + 
-#  geom_point() +
-#  stat_smooth(method = "lm", col = "red") 
-
-zr$data <- zMrg[, .(
-		title, 
-		group, 
-		avg_price 	, 
-		estimate 		, 
-		negative 		, 
-		positive 		,
-		anger 			,
-		anticipation,
-		disgust 		,
-		fear 				,
-		joy 				,
-		sadness 		,
-		surprise 		,
-		trust 			
-	)]
+	mdl <- avg_price ~ anger + anticipation + disgust + fear + joy + negative + positive + sadness + surprise + trust;
+	zr <- lm(mdl, y)
 	
 	return(zr);
 }
@@ -369,31 +240,15 @@ zr$data <- zMrg[, .(
 #Function to get by-group details; using data.table is easiest approach here.
 getGrpDet <- function(){
 
-	titlePr <- data.table::as.data.table(
-		tib %>% 
-			group_by(group, title) %>% 
-				summarise(
-					avg_price = mean(price) 
-				)
-	)
-
-	grpPr <- data.table::as.data.table(
-		tib %>% 
-			group_by(group) %>% 
-				summarise(
-					avg_price = mean(price), 
-					std_dev = sd(price)
-				)
-	)
-	
 	N <- length(unique(tib$title))
-	DT <- data.table::as.data.table(tib)[, .(.N, avgp = mean(price)), by = list(sentiment, title, group)]
-	dDT <- data.table::dcast(DT, title + group ~ sentiment, value.var = "N")
-	mDT <- data.table::melt(dDT, id.vars = c('title', 'group'))
+	DT <- data.table::as.data.table(tib)[price > 0, .(.N, avgp = mean(price)), by = list(sentiment, title, group)]
+	dDT <- data.table::dcast(DT, title + group + avgp ~ sentiment, value.var = "N")
+	mDT <- data.table::melt(dDT, id.vars = c('title', 'group', 'avgp'))
 	mDT[is.na(value), value := 0]
-	titleSn <- data.table::dcast(mDT, group + title ~ variable, value.var = "value")
+	titleSn <- data.table::dcast(mDT, group + title + avgp ~ variable, value.var = "value")
 	
-	grpSn <- titleSn[, .(
+	y <- titleSn[, .(
+		avg_price		 = mean(avgp	 			), 
 		anger 			 = mean(anger 			), 
 		anticipation = mean(anticipation),
 		disgust 		 = mean(disgust 		), 
@@ -407,62 +262,7 @@ getGrpDet <- function(){
 	),
 	by = list(group)]
 	
-	data.table::setkey(grpPr, key = group)
-	data.table::setkey(grpSn, key = group)
-	
-	y <- grpPr[grpSn]
-	
-	y[, total := anger + anticipation + disgust + fear + joy + negative + positive + sadness + surprise + trust]
-	
-#	z <- y[, .(
-#		group, 
-#		avg_price, 
-#		std_dev, 
-#		negative			=	negative		 / total, 
-#		positive			=	positive		 / total, 
-#		anger					=	anger				 / total, 
-#		anticipation	=	anticipation / total, 
-#		disgust				=	disgust			 / total, 
-#		fear					=	fear				 / total, 
-#		joy						=	joy					 / total, 
-#		sadness				=	sadness			 / total, 
-#		surprise			=	surprise		 / total, 
-#		trust					=	trust				 / total
-#	)]
-	
-
-	zr <- runReg();
-	
-	regDT <- as.data.table(t(summary(zr)$coefficients))
-	
-	regDT[, rowname := attributes(t(summary(zr)$coefficients))$dimnames[[1]]]
-	setnames(regDT, old = '(Intercept)', new = 'Intercept')
-	setnames(regDT, old = names(regDT), new = paste0('reg.', names(regDT)))
-	regDT[reg.rowname == 'Estimate', joiner := 1]
-	y[, joiner := 1]
-	
-	zMrg <- merge(x = y, y = regDT, by = 'joiner', allow.cartesian = T)
-	
-	zMrg[, estimate := 
-		negative*reg.negative + 
-		positive*reg.positive + 
-		anger*reg.anger + 
-		anticipation*reg.anticipation + 
-		disgust*reg.disgust + 
-		fear*reg.fear + 
-		joy*reg.joy + 
-		sadness*reg.sadness + 
-		surprise*reg.surprise + 
-		trust*reg.trust
-	]
-	
-	zMrg[, err := estimate - avg_price]
-
-	z <- zMrg[,.(
-		group, 
-	)]
-	
-	return(z);
+	return(y);
 }
 
 
@@ -472,7 +272,7 @@ updateT(unique(links1));
 		#writeLines(jsonlite::toJSON(tib %>% count(sentiment, group, sort=FALSE) ), paste0(outDir, 'SentimentGrp',format(Sys.time(), '%Y%m%d%H%M%S'),'.json'));
 		#writeLines(jsonlite::toJSON(tib %>% group_by(group) %>% summarise(avg_price = mean(price), std_dev = sd(price)), paste0(outDir, 'PriceGrp',format(Sys.time(), '%Y%m%d%H%M%S'),'.json'));
 		writeLines(jsonlite::toJSON(getGrpDet()), paste0(outDir, 'GrpDetail',format(Sys.time(), '%Y%m%d%H%M%S'),'.json'));
-		writeLines(jsonlite::toJSON(runReg()$coeff), paste0(outDir, 'Regression',format(Sys.time(), '%Y%m%d%H%M%S'),'.json'));
+		writeLines(jsonlite::toJSON(as.data.frame(summary(runReg())$coef)), paste0(outDir, 'Regression',format(Sys.time(), '%Y%m%d%H%M%S'),'.json'));
 		writeLines(jsonlite::toJSON(tib), paste0(outDir, 'TibBk',format(Sys.time(), '%Y%m%d%H%M%S'),'.json'));
 
 
@@ -520,14 +320,12 @@ recur <- function(){
 
 		writeLines(jsonlite::toJSON(tib %>% count(sentiment, sort=FALSE) ), paste0(outDir, 'SentimentAgg',format(Sys.time(), '%Y%m%d%H%M%S'),'.json'));
 		writeLines(jsonlite::toJSON(getGrpDet()), paste0(outDir, 'GrpDetail',format(Sys.time(), '%Y%m%d%H%M%S'),'.json'));
-		writeLines(jsonlite::toJSON(runReg()$coeff), paste0(outDir, 'Regression',format(Sys.time(), '%Y%m%d%H%M%S'),'.json'));
+		writeLines(jsonlite::toJSON(as.data.frame(summary(runReg())$coef)), paste0(outDir, 'Regression',format(Sys.time(), '%Y%m%d%H%M%S'),'.json'));
 		writeLines(jsonlite::toJSON(tib), paste0(outDir, 'TibBk',format(Sys.time(), '%Y%m%d%H%M%S'),'.json'));
 
 		filelist <- list.files(outDir)
 		metalist <- list(
 			'sagg' = filelist[grepl('SentimentAgg', filelist, fixed=T)],
-#			'sgrp' = filelist[grepl('SentimentGrp', filelist, fixed=T)],
-#			'pgrp' = filelist[grepl('PriceGrp', filelist, fixed=T)],
 			'grdt' = filelist[grepl('GrpDetail', filelist, fixed=T)],
 			'regr' = filelist[grepl('Regression', filelist, fixed=T)],
 			'tibb' = filelist[grepl('TibBk', filelist, fixed=T)]
