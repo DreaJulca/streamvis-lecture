@@ -123,6 +123,9 @@ d3.json("data/filelist.json", function(dlist) {
 	      .attr("dy", "0.71em")
 	      .attr("text-anchor", "end")
 	      .text("Estimate");
+	      
+      
+	//add whiskers
 	  rG.selectAll(".errline")
 	    .data(rDat)
 	    .enter().append("path")
@@ -132,8 +135,8 @@ d3.json("data/filelist.json", function(dlist) {
 	      	return 	"M" + (rx(d.sentiment) + width/(2*emotions.length)) + "," + ry(d.lower) + 
 	      					"L" + (rx(d.sentiment) + width/(2*emotions.length)) + "," + ry(d.upper)
 	      })
-	      
-	
+
+	//add points
 	  rG.selectAll(".point")
 	    .data(rDat)
 	    .enter().append("circle")
@@ -143,15 +146,7 @@ d3.json("data/filelist.json", function(dlist) {
 	      .attr("cy", function(d) { return ry(d.coef); })
 	      .attr("r", 8);
 	      
-/*
-	      .attr({
-	      		x1: function(d) { return ((width/(2*emotions.length))+rx(d.sentiment));},
-	      		x2: function(d) { return ((width/(2*emotions.length))+rx(d.sentiment));},
-	      		y1: function(d) { return ry(d.lower);},
-	      		y2: function(d) { return ry(d.upper);},
-	      		stroke:"black"
-	      })
-*/	      
+   
 	      
 	  rG.append("g")
 	  	.append('text')
@@ -282,6 +277,56 @@ d3.json("data/filelist.json", function(dlist) {
 
 
  });
+ 
+ 
+//Now do regression
+  var latestReg = 'data/'+dlist.regr[(dlist.regr.length-1)];
+	d3.json(latestReg, function(data){
+		var rDat = [];
+		
+	  emotions.forEach(function(emo){
+//			console.log(_.filter(data, {_row:'anger'}))
+	  	var thisEmo = _.filter(data, {_row:emo})
+			rDat.push({sentiment:emo, coef:thisEmo[0].Estimate, lower:(thisEmo[0].Estimate-Math.abs(thisEmo[0]['Std. Error'])), upper:(thisEmo[0].Estimate+Math.abs(thisEmo[0]['Std. Error']))})
+	  });
+	
+		console.log(rDat)
+		
+		//scale stuff
+		rx.domain(rDat.map(function(d) { return d.sentiment; }));
+	  ry.domain([d3.min(rDat, function(d) { return d.lower; }), d3.max(rDat, function(d) { return d.upper; })]);
+	  
+	  //update axes
+  d3.select("#xaxis_reg")
+      .call(d3.axisBottom(rx));
+
+  d3.select("#yaxis_reg")
+      .call(d3.axisLeft(ry).ticks(10))
+    .selectAll("text")
+    	.transition().duration(1500)
+      .attr("y", 6)
+      .attr("dy", "0.71em");
+
+//update whiskers
+  d3.select('#reg').selectAll(".errline")
+    .data(rDat)
+		.transition().duration(1500)
+	      .attr("d", function(d){
+	      	return 	"M" + (rx(d.sentiment) + width/(2*emotions.length)) + "," + ry(d.lower) + 
+	      					"L" + (rx(d.sentiment) + width/(2*emotions.length)) + "," + ry(d.upper)
+	      })
+
+	//update points
+	  d3.select('#reg').selectAll(".point")
+	  rG.selectAll(".point")
+	    .data(rDat)
+		.transition().duration(1500)
+	      .attr("cx", function(d) { return ((width/(2*emotions.length))+rx(d.sentiment)); })
+	      .attr("cy", function(d) { return ry(d.coef); })
+
+ });
+	      
+   
  
  //now do groups
  var latestGroup = 'data/'+dlist.grdt[(dlist.grdt.length-1)];
