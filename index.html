@@ -21,7 +21,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
 <script>
 var emotions = ['anger', 'anticipation', 'disgust', 'fear', 'joy', 'negative', 'positive', 'sadness', 'surprise', 'trust']
-var svg = d3.select("svg"),
+var svg = d3.select("#agg"),
+		rSvg = d3.select("#reg"),
     margin = {top: 20, right: 20, bottom: 30, left: 80},
     width = +svg.attr("width") - margin.left - margin.right,
     height = +svg.attr("height") - margin.top - margin.bottom;
@@ -30,7 +31,14 @@ var x = d3.scaleBand().rangeRound([0, width]).padding(0.1),
     y = d3.scaleLinear().rangeRound([height, 0])
     ;
 
+var rx = d3.scaleBand().rangeRound([0, width]).padding(0.1),
+    ry = d3.scaleLinear().rangeRound([height, 0])
+    ;
+
 var g = svg.append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var rG = rSvg.append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 //get file list and draw
@@ -80,6 +88,84 @@ d3.json("data/filelist.json", function(dlist) {
 
 
  });
+
+
+//Now do regression
+  var latestReg = 'data/'+dlist.regr[(dlist.regr.length-1)];
+	d3.json(latestReg, function(data){
+		var rDat = [];
+		
+	  emotions.forEach(function(emo){
+//			console.log(_.filter(data, {_row:'anger'}))
+	  	var thisEmo = _.filter(data, {_row:emo})
+			rDat.push({sentiment:emo, coef:thisEmo[0].Estimate, lower:(thisEmo[0].Estimate-Math.abs(thisEmo[0]['Std. Error'])), upper:(thisEmo[0].Estimate+Math.abs(thisEmo[0]['Std. Error']))})
+	  });
+	
+		console.log(rDat)
+		
+		//scale stuff
+		rx.domain(rDat.map(function(d) { return d.sentiment; }));
+	  ry.domain([d3.min(rDat, function(d) { return d.lower; }), d3.max(rDat, function(d) { return d.upper; })]);
+	  
+	  rG.append("g")
+	      .attr("class", "axis axis--x")
+	      .attr("id", "xaxis_reg")
+	      .attr("transform", "translate(0," + height + ")")
+	      .call(d3.axisBottom(rx));
+	
+	  rG.append("g")
+	      .attr("class", "axis axis--y")
+	      .attr("id", "yaxis_reg")
+	      .call(d3.axisLeft(ry).ticks(10))
+	    .append("text")
+	      .attr("transform", "rotate(-90)")
+	      .attr("y", 6)
+	      .attr("dy", "0.71em")
+	      .attr("text-anchor", "end")
+	      .text("Estimate");
+	  rG.selectAll(".errline")
+	    .data(rDat)
+	    .enter().append("path")
+	      .attr("class", "errline")
+	      .attr("stroke","black")
+	      .attr("d", function(d){
+	      	return 	"M" + (rx(d.sentiment) + width/(2*emotions.length)) + "," + ry(d.lower) + 
+	      					"L" + (rx(d.sentiment) + width/(2*emotions.length)) + "," + ry(d.upper)
+	      })
+	      
+	
+	  rG.selectAll(".point")
+	    .data(rDat)
+	    .enter().append("circle")
+	      .attr("class", "point")
+	      .attr("fill", "steelblue")
+	      .attr("cx", function(d) { return ((width/(2*emotions.length))+rx(d.sentiment)); })
+	      .attr("cy", function(d) { return ry(d.coef); })
+	      .attr("r", 8);
+	      
+/*
+	      .attr({
+	      		x1: function(d) { return ((width/(2*emotions.length))+rx(d.sentiment));},
+	      		x2: function(d) { return ((width/(2*emotions.length))+rx(d.sentiment));},
+	      		y1: function(d) { return ry(d.lower);},
+	      		y2: function(d) { return ry(d.upper);},
+	      		stroke:"black"
+	      })
+*/	      
+	      
+	  rG.append("g")
+	  	.append('text')
+	      .attr("y", 6)
+	      .attr("x", 6)
+	      .attr("dy", "0.71em")
+	  	.text("Sentiment coefficients & Std. error")
+	
+	
+		
+
+	})
+  
+
 
 //Now do groups
   var latestGroup = 'data/'+dlist.grdt[(dlist.grdt.length-1)];
