@@ -86,7 +86,7 @@ d3.json("data/filelist.json", function(dlist) {
 
  d3.json(latestGroup, function(data){
  	
-	console.log(data);
+//	console.log(data);
 	var grpArr = _.pluck(data, 'group');
 	grpArr.forEach(function(grp){
 		var thisGroup = _.filter(data, {'group':grp})[0];
@@ -196,6 +196,129 @@ d3.json("data/filelist.json", function(dlist) {
 
 
  });
+ 
+ //now do groups
+ var latestGroup = 'data/'+dlist.grdt[(dlist.grdt.length-1)];
+
+ d3.json(latestGroup, function(data){
+ 	
+//	console.log(data);
+	var grpArr = _.pluck(data, 'group');
+	grpArr.forEach(function(grp){
+	
+		var thisGroup = _.filter(data, {'group':grp})[0];
+		
+		var grpCln = grp.replace(/[^a-z0-9]/gmi, "_").replace(/\s+/g, "_");
+		
+		grpCln = grpCln != '' ? grpCln : 'unclassified'
+		
+		var gDat = [];
+		
+	  emotions.forEach(function(emo){
+			gDat.push({sentiment:emo, n:thisGroup[emo]})
+	  });
+	
+		try{
+			var grpSvg = d3.select('#'+grpCln)
+	
+	    var height2 = +grpSvg.attr("height") - margin.top - margin.bottom;
+	
+		  var y2 = d3.scaleLinear().rangeRound([(height2), 0])
+			
+			var grpG = grpSvg.select('g')
+		  x.domain(emotions);
+	  	y2.domain([0, d3.max(gDat, function(d) { return d.n; })]);
+		} catch(err){
+			var grpSvg = d3.select('body').append('svg')
+			.attr('id', grpCln)
+			.attr('width', "600") 
+			.attr('height', "250");
+	
+	    var height2 = +grpSvg.attr("height") - margin.top - margin.bottom;
+	
+		  var y2 = d3.scaleLinear().rangeRound([(height2), 0])
+			
+			var grpG = grpSvg.append('g')
+	    .attr("transform", "translate(" + margin.left + "," + margin.top/4 + ")");
+	
+		  x.domain(emotions);
+		  y2.domain([0, d3.max(gDat, function(d) { return d.n; })]);
+			var grptext = grp.replace(/[^a-z0-9]/gmi, "_").replace(/\s+/g, "_") != '' ? grp : grpCln;
+			
+		  grpG.append("g")
+		  	.append('text')
+		      .attr("y", 6)
+		      .attr("x", 6)
+		      .attr("dy", "0.71em")
+		  	.text(grptext)
+		
+		  grpG.append("g")
+		      .attr("class", "axis axis--x")
+		      .attr("id", "xaxis_"+grpCln)
+		      .attr("transform", "translate(0," + height2 + ")")
+		      .call(d3.axisBottom(x));
+		
+		  grpG.append("g")
+		      .attr("class", "axis axis--y")
+		      .attr("id", "yaxis_"+grpCln)
+		      .call(d3.axisLeft(y2).ticks(10))
+		    .append("text")
+		      .attr("transform", "rotate(-90)")
+		      .attr("y", 6)
+		      .attr("dy", "0.71em")
+		      .attr("text-anchor", "end")
+		      .text("Frequency");
+		
+		  grpG.selectAll(".bar_"+grpCln)
+		    .data(gDat)
+		    .enter().append("rect")
+		      .attr("class", "bar_"+grpCln)
+		      .attr("x", function(d) { return x(d.sentiment); })
+		      .attr("y", function(d) { return y2(d.n); })
+		      .attr("fill", "steelblue")
+		      .attr("width", x.bandwidth())
+		      .attr("height", function(d) { return height2 - y2(d.n)});
+	
+	
+			
+		} finally{
+			
+			var grpSvg = d3.select('#'+grpCln)
+	
+	    var height2 = +grpSvg.attr("height") - margin.top - margin.bottom;
+	
+		  var y2 = d3.scaleLinear().rangeRound([(height2), 0])
+			
+			var grpG = grpSvg.select('g')
+		  x.domain(emotions);
+	  	y2.domain([0, d3.max(gDat, function(d) { return d.n; })]);
+
+			d3.select("#xaxis_"+grpCln)
+			    .call(d3.axisBottom(x));
+			
+			d3.select("#yaxis_"+grpCln)
+			    .call(d3.axisLeft(y2).ticks(10))
+			  .selectAll("text")
+			  	.transition().duration(1500)
+			    .attr("y", 6)
+			    .attr("dy", "0.71em");
+			
+			d3.select('#'+grpCln).selectAll(".bar_"+grpCln)
+			  .data(gDat)
+				.transition().duration(1500)
+			    .attr("x", function(d) { return x(d.sentiment); })
+			    .attr("y", function(d) { return y2(d.n); })
+			    .attr("width", x.bandwidth())
+			    .attr("height", function(d) { return height2 - y2(d.n); });
+	
+	
+	}
+	})
+	
+
+ });
+
+ 
 });
 
 
