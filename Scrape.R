@@ -60,7 +60,7 @@ links;
 #Let's make a GET request to read the information from the first page (using httr) just to see what happens.
 #We assign it to "pg1" so that we only need to make a request from the CL servers once.
 pg1 <- httr::GET(links[1]) %>% 
-	rvest::read_html();
+	xml2::read_html();
 pg1;
 
 #Let's get all of the "meta" HTML elements:
