@@ -1,8 +1,12 @@
 #You may need to install these libraries:
-#install.packages(c('httr', 'rvest', 'xml2', 'dplyr', 'data.table', 'jsonlite', 'tidytext'))
+install.packages(c('httr', 'rvest', 'xml2', 'dplyr', 'data.table', 'jsonlite', 'tidytext'))
 
 ###ONLY LINE YOU'LL REALLY NEED TO CHANGE: Set to directory of streaming vis
-outDir <- paste0('c:/users/niacj1/Documents/LectureINST728Q/data/')
+outDir <- paste0(
+	'c:/users/', 
+	Sys.info()[[7]], 
+	'/Documents/GitHub/streamvis-lecture/data/'
+)
 
 try(dir.create(outDir, recursive = TRUE))
 
@@ -74,7 +78,8 @@ hrefs <- ses %>%
 ids <- unique(hrefs[!grepl('#', hrefs, fixed = T)]);
 
 #Paste the html "ids" together with the CL url:
-links1 <- paste0(clUrl, ids);
+#links1 <- paste0(clUrl, ids);
+links1 <- ids;
 
 #Create tibble to update later
 tib <- tibble::tibble();

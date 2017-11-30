@@ -42,7 +42,10 @@ var rG = rSvg.append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 //get file list and draw
-d3.json("data/filelist.json", function(dlist) {
+//d3.json("data/filelist.json", function(dlist) {
+//use this if you can't get R script to run
+d3.json("sample/filelist.json", function(dlist) {
+
 	console.log(dlist);
 	console.log(dlist.sagg[(dlist.sagg.length-1)]);
   var latest = 'data/'+dlist.sagg[(dlist.sagg.length-1)];
