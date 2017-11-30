@@ -250,6 +250,7 @@ d3.json("data/filelist.json", function(dlist) {
 function update(){
 //this way, we alternate between initial state and new state
 var flist = initial ? "data/InitFileList.json" : "data/FileList.json";
+var colChg = initial ? "red" : "blue";
 initial = initial ? false : true;
 
 d3.json(flist, function(dlist) {
@@ -279,7 +280,8 @@ d3.json(flist, function(dlist) {
       .attr("x", function(d) { return x(d.sentiment); })
       .attr("y", function(d) { return y(d.n); })
       .attr("width", x.bandwidth())
-      .attr("height", function(d) { return height - y(d.n); });
+      .attr("height", function(d) { return height - y(d.n); })
+	      .attr("fill", function(d) { return colChg; })
 
 
  });
@@ -329,6 +331,8 @@ d3.json(flist, function(dlist) {
 		.transition().duration(1500)
 	      .attr("cx", function(d) { return ((width/(2*emotions.length))+rx(d.sentiment)); })
 	      .attr("cy", function(d) { return ry(d.coef); })
+	      .attr("r", function(d) { return ry(d.coef)/100; })
+	      .attr("fill", function(d) { return colChg; })
 
  });
 	      
@@ -446,7 +450,9 @@ d3.json(flist, function(dlist) {
 			    .attr("x", function(d) { return x(d.sentiment); })
 			    .attr("y", function(d) { return y2(d.n); })
 			    .attr("width", x.bandwidth())
-			    .attr("height", function(d) { return height2 - y2(d.n); });
+			    .attr("height", function(d) { return height2 - y2(d.n); })
+	      .attr("fill", function(d) { return colChg; })
+	      .style("opacity", function(d) { return x(d.sentiment)/600})
 	
 	
 	}
