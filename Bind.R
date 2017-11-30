@@ -2,13 +2,26 @@
 install.packages(c('httr', 'rvest', 'xml2', 'dplyr', 'data.table', 'jsonlite', 'tidytext'))
 
 ###ONLY LINE YOU'LL REALLY NEED TO CHANGE: Set to directory of streaming vis
-outDir <- paste0(
+rootDir <- paste0(
 	'c:/users/', 
 	Sys.info()[[7]], 
-	'/Documents/GitHub/streamvis-lecture/data/'
+	'/Documents/GitHub/streamvis-lecture/'
 )
 
+#Copy sample files
+outDir <- paste0(rootDir, 'data/')
+
 try(dir.create(outDir, recursive = TRUE))
+
+
+sampleDir <- paste0(rootDir, 'sample/')
+
+copyList <- list.files(sampleDir)
+
+lapply(copyList, function(fl){
+	file.copy(from = paste0(sampleDir, fl), to = paste0(outDir, fl))	
+})
+
 
 #Call the libraries you'll need
 library(httr);

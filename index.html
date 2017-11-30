@@ -20,6 +20,8 @@
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
 <script>
+var initial = true;
+
 var emotions = ['anger', 'anticipation', 'disgust', 'fear', 'joy', 'negative', 'positive', 'sadness', 'surprise', 'trust']
 var svg = d3.select("#agg"),
 		rSvg = d3.select("#reg"),
@@ -42,9 +44,7 @@ var rG = rSvg.append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 //get file list and draw
-//d3.json("data/filelist.json", function(dlist) {
-//use this if you can't get R script to run
-d3.json("sample/filelist.json", function(dlist) {
+d3.json("data/filelist.json", function(dlist) {
 
 	console.log(dlist);
 	console.log(dlist.sagg[(dlist.sagg.length-1)]);
@@ -248,8 +248,11 @@ d3.json("sample/filelist.json", function(dlist) {
 
 //get file list again to update if needed
 function update(){
+//this way, we alternate between initial state and new state
+var flist = initial ? "data/InitFileList.json" : "data/FileList.json";
+initial = initial ? false : true;
 
-d3.json("data/filelist.json", function(dlist) {
+d3.json(flist, function(dlist) {
 //	console.log(dlist);
 //	console.log(dlist.sagg[(dlist.sagg.length-1)]);
   var latest = 'data/'+dlist.sagg[(dlist.sagg.length-1)];
@@ -456,8 +459,8 @@ d3.json("data/filelist.json", function(dlist) {
 });
 
 
-//Recursively update, with a 3-second delay (1000 ms = 1 sec)
-		setTimeout('update()', 3000)
+//Recursively update (or swap between initial and new), with a 5-second delay (1000 ms = 1 sec)
+		setTimeout('update()', 5000)
 }
 
 
