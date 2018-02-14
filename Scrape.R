@@ -4,7 +4,7 @@
 #Call the libraries you'll need
 library(httr);
 library(rvest);
-library(ggvis);
+#library(ggvis);
 library(dplyr);
 #library(data.table);
 library(tidytext);
@@ -52,7 +52,8 @@ hrefs[grepl('#', hrefs, fixed = T)];
 
 
 #Back to the scraping: Paste the html "ids" together with the CL url:
-links <- paste0(clUrl, ids);
+#links <- paste0(clUrl, ids);
+links <- ids;
 
 #Now you have a bunch of links to sales pages:
 links;
@@ -131,8 +132,8 @@ posting <- tibble(
 	title = title, 
 	time = dtime,
 	price = nprice,
-	desc = udesc,
-	url = lnk
+	desc = udesc #,
+	#url = lnk
 )
 
 
