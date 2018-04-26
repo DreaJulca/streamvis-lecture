@@ -1,5 +1,5 @@
 #You may need to install these libraries:
-install.packages(c('httr', 'rvest', 'xml2', 'dplyr', 'data.table', 'jsonlite', 'tidytext'))
+#install.packages(c('httr', 'rvest', 'xml2', 'dplyr', 'data.table', 'jsonlite', 'tidytext'))
 
 ###ONLY LINE YOU'LL REALLY NEED TO CHANGE: Set to directory of streaming vis
 rootDir <- paste0(
@@ -106,6 +106,8 @@ updateT <- function(links){
 
 	#Use lapply to apply the method from previous code to *all* links
 	lapply(links, function(lnk){
+	message('Link: ')
+	message(lnk)
 	#Test: lnk <- links[1]
 	#We assign it to "pg1" so that we only need to make a request from the CL servers once.
 		pg <- httr::GET(lnk) %>% 
@@ -308,19 +310,21 @@ recur <- function(){
 		print(paste0(srcUrl, '?s=', s))
 		ses <<- rvest::html_session(paste0(srcUrl, '?s=', s));
 	}
+
 	#Get the links:
 	hrefs <- ses %>% 
 		rvest::html_nodes('#sortable-results > ul') %>% 
 			rvest::html_nodes('a') %>% 
 				#the name of the html attribute we want is "href"; this returns values as strings
 				rvest::html_attr('href');
-	
 	#Subset to just the item IDs you want: Unique, drop the '#' values using !grepl (NOT where '#' is found).
 	ids <- unique(hrefs[!grepl('#', hrefs, fixed = T)]);
 	
-	#Paste the html "ids" together with the CL url:
-	newlinks <- paste0(clUrl, ids);
-	
+	#Paste the html "ids" together with the CL url: No longer necessary
+	#newlinks <- paste0(clUrl, ids);
+	newlinks <- ids;
+	message('New links:')
+	message(ids)
 	#get links already in tibble
 	oldlinks <- tolower(tib$url);
 	
@@ -332,7 +336,7 @@ recur <- function(){
 	uplinks <- uniqlinks[!(tolower(uniqlinks) %in% tolower(junk))];
 	
 	junk <<- c(junk, uplinks)
-	
+
 	if(length(uplinks)>0){
 		try(updateT(uplinks));
 

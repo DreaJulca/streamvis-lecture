@@ -88,6 +88,8 @@ price <- pg1 %>%
 #Strip dollar signs
 nprice <- gsub('$', '', price, fixed = T)
 
+
+
 #Strip commas, class as numeric
 nprice <- as.numeric(gsub(',', '', nprice, fixed = T))
 
@@ -117,8 +119,22 @@ udesc <- pg1 %>%
 udesc;
 writeLines(udesc);
 
+
 #Drop the QR code bit, if any 
 udesc <- gsub('QR Code Link to This Post', '', udesc, fixed = T)
+
+
+nprice
+#if there is no numeric price, maybe it is in the description; search for it
+if(length(nprice) < 1){
+	splitDesc <- strsplit(udesc, split = '$', fixed = T)[[1]]
+	splitDesc
+	if(length(splitDesc) > 1){
+		cprice <- strsplit(splitDesc[2], ' ', fixed = T)[[1]][1]
+		nprice <- as.numeric(cprice)
+	}
+}
+
 
 #Cool. Let's use the tidytext library to get the sentiment from the user description.
 #First, choose a sentiment lexicon ('afinn', 'bing', or 'nrc')
@@ -127,7 +143,6 @@ lex <- tidytext::get_sentiments(lexicon = 'nrc');
 
 #Look at the unique sentiments we have in our lexicon. We'll use these in our "tibble"
 unique(lex$sentiment)
-
 
 posting <- tibble(
 	title = title, 
@@ -156,7 +171,7 @@ sent <- cleanPost  %>%
 sent %>% 
 	count(sentiment, sort = TRUE) 
 
-posting %>% mutate(sentiments = emotCnt)
+#posting %>% mutate(sentiments = emotCnt)
 
 
 
