@@ -8,6 +8,7 @@ library(rvest);
 library(dplyr);
 #library(data.table);
 library(tidytext);
+
 clUrl <- 'https://washingtondc.craigslist.org';
 
 srcUrl <- paste0(clUrl, '/search/sss');
